@@ -1,4 +1,7 @@
-FROM python:3.10-slim
+# ============================================
+# Stage 1: 빌드 스테이지 (원본 소스 + 빌드 도구)
+# ============================================
+FROM python:3.10-slim AS builder
 
 WORKDIR /app
 
@@ -28,7 +31,14 @@ RUN mkdir -p protected/src/core && \
     cp src/__init__.py protected/src/ && \
     mv protected/utils.py protected/src/
 
-# 실행 디렉토리 변경
-WORKDIR /app/protected
+# ============================================
+# Stage 2: 실행 스테이지 (보호된 코드만 포함)
+# ============================================
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# 빌드 스테이지에서 보호된 코드만 복사
+COPY --from=builder /app/protected/ ./
 
 CMD ["python", "interface.py"]
